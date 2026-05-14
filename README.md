@@ -2,7 +2,7 @@
 
 A personal all-in-one dashboard to track job applications, manage your learning roadmap, schedule events, and stay on top of tasks — all in a single HTML file that runs entirely in your browser, protected by a password.
 
-**[→ View Live Demo](https://your-username.github.io/your-repo-name)**
+**[→ View Live Demo](https://adityaamitra.github.io/Career_Tracker/)**
 
 ---
 
