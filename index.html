@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Career & Learning Dashboard</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;color:#1a1a1a;background:#f5f5f3;min-height:100vh}
+#wrap{max-width:880px;margin:0 auto;padding:2rem 1.5rem}
+input,select,textarea{font-family:inherit;font-size:14px;color:#1a1a1a;background:#fff;border:.5px solid rgba(0,0,0,.28);border-radius:8px;padding:7px 10px;outline:none;width:100%;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{border-color:rgba(0,0,0,.5);box-shadow:0 0 0 3px rgba(0,0,0,.06)}
+button{font-family:inherit;font-size:13px;cursor:pointer;background:transparent;border:.5px solid rgba(0,0,0,.25);border-radius:8px;padding:7px 14px;color:#1a1a1a;transition:background .15s}
+button:hover{background:rgba(0,0,0,.05)}
+button:disabled{opacity:.4;cursor:not-allowed}
+label{font-size:12px;color:#666;display:block;margin-bottom:4px}
+.tabs{display:flex;border-bottom:.5px solid rgba(0,0,0,.12);margin-bottom:1.5rem}
+.tbtn{display:flex;align-items:center;gap:6px;padding:8px 16px;border:none;border-bottom:2px solid transparent;border-radius:0;font-weight:400;color:#888;font-size:13px;cursor:pointer;margin-bottom:-1px;background:transparent;white-space:nowrap;transition:color .15s}
+.tbtn.on{font-weight:500;color:#1a1a1a;border-bottom-color:#1a1a1a}
+.card{background:#fff;border:.5px solid rgba(0,0,0,.12);border-radius:12px;overflow:hidden}
+.cp{background:#fff;border:.5px solid rgba(0,0,0,.12);border-radius:12px;padding:1rem}
+.sc{background:#ebebea;border-radius:8px;padding:14px 16px;flex:1;min-width:0}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ga{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.overlay{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:1rem}
+.mbox{background:#fff;border:.5px solid rgba(0,0,0,.2);border-radius:12px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;padding:1.5rem}
+.mbox.sm{max-width:420px}
+.mhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem}
+.mhead h3{margin:0;font-size:16px;font-weight:500}
+.pt{height:5px;background:rgba(0,0,0,.07);border-radius:999px;overflow:hidden;margin-top:3px}
+.pf{height:100%;border-radius:999px;transition:width .4s}
+.empty{text-align:center;padding:3rem 1rem;color:#888}
+.empty i{font-size:32px;display:block;margin-bottom:12px;opacity:.35}
+.bp{background:#1a1a1a;color:#fff;border:none;font-weight:500}
+.bd{color:#A32D2D;border-color:rgba(163,45,45,.3)}
+.bs{font-size:12px;padding:4px 12px;display:inline-flex;align-items:center;gap:4px}
+.bi{border:none;background:none;color:#bbb;padding:2px 4px;font-size:16px}
+.sep{border:none;border-top:.5px solid rgba(0,0,0,.08);margin:0}
+a{color:#185FA5;text-decoration:none}
+a:hover{text-decoration:underline}
+@media(max-width:600px){#wrap{padding:1rem}.g2{grid-template-columns:1fr}.tl{display:none}}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div style="margin-bottom:1.5rem">
+    <h1 style="margin:0 0 4px;font-size:22px;font-weight:500">Dashboard</h1>
+    <p style="margin:0;font-size:13px;color:#888">Career tracking · Learning · Calendar · Tasks</p>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <div id="main"></div>
+</div>
+<div id="mroot"></div>
+
+<script>
+// ─── CONSTANTS ────────────────────────────────────────────────────────────────
+const JST=['Applied','Phone Screen','Interviewing','Offer','Rejected','Ghosted'];
+const JC={Applied:{bg:'#E6F1FB',tx:'#0C447C',dot:'#378ADD'},'Phone Screen':{bg:'#EEEDFE',tx:'#3C3489',dot:'#7F77DD'},Interviewing:{bg:'#FAEEDA',tx:'#633806',dot:'#EF9F27'},Offer:{bg:'#EAF3DE',tx:'#27500A',dot:'#639922'},Rejected:{bg:'#FCEBEB',tx:'#791F1F',dot:'#E24B4A'},Ghosted:{bg:'#F1EFE8',tx:'#444441',dot:'#888780'}};
+const SUBS=[
+  {id:'python',name:'Python',short:'Python',color:'#3B6D11',bg:'#EAF3DE',lite:'#C0DD97',
+   topics:['Variables & Data Types','Control Flow','Functions','OOP','Modules & Packages','File I/O','Error Handling','List Comprehensions','Decorators','Async/Await']},
+  {id:'dsa',name:'DSA in Python',short:'DSA',color:'#0C447C',bg:'#E6F1FB',lite:'#B5D4F4',
+   topics:['Arrays & Lists','Linked Lists','Stacks & Queues','Hash Tables','Trees & BST','Graphs','Sorting Algorithms','Searching','Dynamic Programming','Recursion']},
+  {id:'devops',name:'DevOps',short:'DevOps',color:'#633806',bg:'#FAEEDA',lite:'#FAC775',
+   topics:['Linux Basics','Shell Scripting','Git & Version Control','Docker','Kubernetes','CI/CD Pipelines','AWS Basics','Monitoring & Logging','Infrastructure as Code','Networking']},
+  {id:'webdev',name:'Web Dev',short:'Web Dev',color:'#3C3489',bg:'#EEEDFE',lite:'#CECBF6',
+   topics:['HTML & CSS','JavaScript','React','REST APIs','Node.js','SQL Databases','Authentication','Deployment','TypeScript','Testing']},
+  {id:'ai',name:'AI/ML',short:'AI/ML',color:'#791F1F',bg:'#FCEBEB',lite:'#F7C1C1',
+   topics:['Python for ML','NumPy & Pandas','Data Visualization','Scikit-learn','Regression & Classification','Neural Networks','Deep Learning (PyTorch)','NLP Basics','Computer Vision','LLMs & Prompting']},
+];
+const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const SLOTS=['Morning','Afternoon','Evening','Night'];
+const TCATS=['General','Job Search','Python','DSA','DevOps','Web Dev','AI/ML'];
+const TCC={General:{bg:'#F1EFE8',tx:'#444441',dot:'#888780'},'Job Search':{bg:'#E6F1FB',tx:'#0C447C',dot:'#378ADD'},Python:{bg:'#EAF3DE',tx:'#27500A',dot:'#639922'},DSA:{bg:'#E6F1FB',tx:'#0C447C',dot:'#185FA5'},DevOps:{bg:'#FAEEDA',tx:'#633806',dot:'#EF9F27'},'Web Dev':{bg:'#EEEDFE',tx:'#3C3489',dot:'#7F77DD'},'AI/ML':{bg:'#FCEBEB',tx:'#791F1F',dot:'#E24B4A'}};
+const ECC={blue:{bg:'#E6F1FB',tx:'#0C447C',dot:'#378ADD'},green:{bg:'#EAF3DE',tx:'#27500A',dot:'#639922'},amber:{bg:'#FAEEDA',tx:'#633806',dot:'#EF9F27'},red:{bg:'#FCEBEB',tx:'#791F1F',dot:'#E24B4A'},purple:{bg:'#EEEDFE',tx:'#3C3489',dot:'#7F77DD'}};
+const TABS=[{id:'jobs',icon:'ti-briefcase',label:'Jobs'},{id:'calendar',icon:'ti-calendar',label:'Calendar'},{id:'learning',icon:'ti-book',label:'Learning'},{id:'todo',icon:'ti-list',label:'Todo'},{id:'progress',icon:'ti-chart-bar',label:'Progress'}];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+const S={
+  tab:'jobs',
+  apps:[],events:[],todos:[],
+  learning:{completed:{},timetable:{}},
+  jFilter:'All',jSearch:'',jOpen:null,
+  calYear:new Date().getFullYear(),calMonth:new Date().getMonth(),calSel:null,
+  learnActive:null,
+  tFilter:'All',
+  modal:null,form:{}
+};
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
+const x=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fd=d=>{try{return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});}catch{return d;}};
+const ff=d=>{try{return new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});}catch{return d;}};
+const ds=(y,m,d)=>`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
+function persist(){
+  try{localStorage.setItem('d-apps',JSON.stringify(S.apps));}catch{}
+  try{localStorage.setItem('d-events',JSON.stringify(S.events));}catch{}
+  try{localStorage.setItem('d-todos',JSON.stringify(S.todos));}catch{}
+  try{localStorage.setItem('d-learn',JSON.stringify(S.learning));}catch{}
+}
+function hydrate(){
+  try{const v=localStorage.getItem('d-apps');if(v)S.apps=JSON.parse(v);}catch{}
+  try{const v=localStorage.getItem('d-events');if(v)S.events=JSON.parse(v);}catch{}
+  try{const v=localStorage.getItem('d-todos');if(v)S.todos=JSON.parse(v);}catch{}
+  try{const v=localStorage.getItem('d-learn');if(v)S.learning=JSON.parse(v);}catch{}
+}
+
+function re(){
+  document.getElementById('tabs').innerHTML=TABS.map(t=>`<button class="tbtn${S.tab===t.id?' on':''}" onclick="go('${t.id}')"><i class="ti ${t.icon}"></i><span class="tl">${t.label}</span></button>`).join('');
+  document.getElementById('main').innerHTML=renderTab();
+  document.getElementById('mroot').innerHTML=S.modal?renderModal():'';
+}
+function go(id){S.tab=id;re();}
+
+// ─── SHARED ───────────────────────────────────────────────────────────────────
+function badge(st){const c=JC[st]||JC.Applied;return`<span style="display:inline-flex;align-items:center;gap:5px;background:${c.bg};color:${c.tx};font-size:12px;font-weight:500;padding:3px 10px;border-radius:999px"><span style="width:6px;height:6px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>${x(st)}</span>`;}
+function sc(label,val,color){return`<div class="sc"><p style="font-size:12px;color:#666;margin:0 0 3px;letter-spacing:.03em">${label}</p><p style="font-size:26px;font-weight:500;margin:0;color:${color||'#1a1a1a'}">${val}</p></div>`;}
+function pb(label,pct,color,sub){return`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:13px">${x(label)}</span><span style="font-size:13px;font-weight:500;color:${color||'#1a1a1a'}">${sub||pct+'%'}</span></div><div class="pt"><div class="pf" style="width:${pct}%;background:${color||'#1a1a1a'}"></div></div></div>`;}
+
+// ─── JOBS ─────────────────────────────────────────────────────────────────────
+function renderJobs(){
+  const filt=S.apps.filter(a=>{
+    if(S.jFilter!=='All'&&a.status!==S.jFilter)return false;
+    const q=S.jSearch.toLowerCase();
+    return!q||a.company.toLowerCase().includes(q)||a.position.toLowerCase().includes(q);
+  });
+  const cnt=JST.reduce((a,s)=>({...a,[s]:S.apps.filter(v=>v.status===s).length}),{});
+
+  let list='';
+  if(!filt.length){
+    list=`<div class="empty"><i class="ti ti-briefcase"></i><p style="margin:0;font-size:14px">${S.apps.length?'No results match your filters.':'No applications yet — add your first one!'}</p></div>`;
+  }else{
+    list=`<div class="card">${filt.map((a,i)=>{
+      const open=S.jOpen===a.id;
+      const contacts=(a.contacts||[]).filter(c=>c.name);
+      return`<div style="border-top:${i?'.5px solid rgba(0,0,0,.1)':'none'}">
+        <div style="display:grid;grid-template-columns:1fr auto;gap:12px;padding:12px 16px;cursor:pointer;background:${open?'#f7f7f5':'transparent'}" onclick="jOpen('${a.id}')">
+          <div style="display:flex;align-items:center;gap:12px;min-width:0">
+            <div style="width:36px;height:36px;border-radius:8px;background:#f0f0ee;border:.5px solid rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0;color:#666">${x(a.company.slice(0,2).toUpperCase())}</div>
+            <div style="min-width:0">
+              <p style="margin:0;font-weight:500;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x(a.company)}</p>
+              <p style="margin:0;font-size:12px;color:#666;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x(a.position)}</p>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            ${badge(a.status)}
+            <span style="font-size:12px;color:#888;white-space:nowrap">${a.dateApplied?fd(a.dateApplied):''}</span>
+            <i class="ti ti-chevron-${open?'up':'down'}" style="font-size:14px;color:#888"></i>
+          </div>
+        </div>
+        ${open?`<div style="padding:0 16px 14px;border-top:.5px solid rgba(0,0,0,.08)">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-top:14px;margin-bottom:12px">
+            ${contacts.length?`<div><p style="font-size:11px;color:#888;margin:0 0 8px;text-transform:uppercase;letter-spacing:.05em">Reached out to</p>
+              ${contacts.map(c=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                <div style="width:28px;height:28px;border-radius:50%;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:#0C447C;flex-shrink:0">${x(c.name.slice(0,2).toUpperCase())}</div>
+                <div><p style="margin:0;font-size:13px;font-weight:500">${x(c.name)}</p>${c.designation?`<p style="margin:0;font-size:11px;color:#666">${x(c.designation)}</p>`:''}${c.email?`<p style="margin:0;font-size:11px;color:#185FA5">${x(c.email)}</p>`:''}</div>
+              </div>`).join('')}
+            </div>`:''}
+            ${a.notes?`<div><p style="font-size:11px;color:#888;margin:0 0 4px;text-transform:uppercase;letter-spacing:.05em">Notes</p><p style="font-size:13px;margin:0;line-height:1.6">${x(a.notes)}</p></div>`:''}
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;padding-top:4px">
+            ${a.jobUrl?`<a href="${x(a.jobUrl)}" target="_blank" style="font-size:12px;display:flex;align-items:center;gap:4px"><i class="ti ti-external-link" style="font-size:13px"></i> Job posting</a>`:''}
+            <div style="flex:1"></div>
+            <button class="bs" onclick="jEdit('${a.id}')"><i class="ti ti-edit"></i> Edit</button>
+            <button class="bs bd" onclick="jDel('${a.id}')"><i class="ti ti-trash"></i> Delete</button>
+          </div>
+        </div>`:''}
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  return`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.2rem;flex-wrap:wrap;gap:10px">
+    <div><h2 style="margin:0;font-size:18px;font-weight:500">Applications</h2><p style="margin:2px 0 0;font-size:13px;color:#666">${S.apps.length} total tracked</p></div>
+    <button class="bp" onclick="jAdd()" style="display:flex;align-items:center;gap:6px;padding:8px 16px"><i class="ti ti-plus" style="font-size:16px"></i> New application</button>
+  </div>
+  <div class="row" style="margin-bottom:1.2rem">
+    ${sc('Total',S.apps.length)}${sc('In progress',(cnt['Phone Screen']||0)+(cnt.Interviewing||0),'#BA7517')}${sc('Offers',cnt.Offer||0,'#3B6D11')}${sc('Rejected',cnt.Rejected||0,'#A32D2D')}
+  </div>
+  <div class="row" style="margin-bottom:1rem">
+    <div style="position:relative;flex:1;min-width:160px"><i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:15px;color:#aaa;pointer-events:none"></i>
+      <input id="jsearch" value="${x(S.jSearch)}" oninput="S.jSearch=this.value;rj()" placeholder="Search company or role…" style="padding-left:32px"></div>
+    <select onchange="S.jFilter=this.value;rj()" style="width:auto"><option value="All"${S.jFilter==='All'?' selected':''}>All statuses</option>${JST.map(s=>`<option value="${s}"${S.jFilter===s?' selected':''}>${s}</option>`).join('')}</select>
+  </div>
+  ${list}`;
+}
+function rj(){document.getElementById('main').innerHTML=renderJobs();const e=document.getElementById('jsearch');if(e){e.focus();const l=e.value.length;e.setSelectionRange(l,l);}}
+function jOpen(id){S.jOpen=S.jOpen===id?null:id;re();}
+function jDel(id){if(confirm('Remove this application?')){S.apps=S.apps.filter(a=>a.id!==id);persist();re();}}
+function jAdd(){S.form={_t:'job',_e:null,company:'',position:'',status:'Applied',dateApplied:new Date().toISOString().split('T')[0],jobUrl:'',notes:'',contacts:[{name:'',designation:'',email:''}]};S.modal='job';re();}
+function jEdit(id){const a=S.apps.find(v=>v.id===id);if(!a)return;S.form={_t:'job',_e:id,...a,contacts:a.contacts?.length?a.contacts.map(c=>({...c})):[{name:'',designation:'',email:''}]};S.modal='job';re();}
+function jSave(){
+  const f=S.form;if(!f.company||!f.position)return;
+  const job={id:f._e||uid(),company:f.company,position:f.position,status:f.status,dateApplied:f.dateApplied,jobUrl:f.jobUrl,notes:f.notes,contacts:f.contacts};
+  if(f._e)S.apps=S.apps.map(a=>a.id===f._e?job:a);else S.apps=[job,...S.apps];
+  persist();S.modal=null;S.form={};re();
+}
+function cAdd(){S.form.contacts.push({name:'',designation:'',email:''});re();}
+function cDel(i){if(S.form.contacts.length>1){S.form.contacts.splice(i,1);re();}}
+function cUpd(i,k,v){S.form.contacts[i][k]=v;}
+
+// ─── CALENDAR ─────────────────────────────────────────────────────────────────
+function renderCalendar(){
+  const{calYear:y,calMonth:m}=S;
+  const today=new Date();
+  const todayStr=ds(today.getFullYear(),today.getMonth(),today.getDate());
+  const dim=new Date(y,m+1,0).getDate();
+  const fd0=(()=>{let d=new Date(y,m,1).getDay();return d===0?6:d-1;})();
+  const mn=new Date(y,m,1).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  const dayEvts=d=>S.events.filter(e=>e.date===ds(y,m,d));
+
+  let cells='';
+  for(let i=0;i<fd0;i++)cells+=`<div style="min-height:60px;border-right:.5px solid rgba(0,0,0,.07);border-bottom:.5px solid rgba(0,0,0,.07);background:#fafaf8"></div>`;
+  for(let d=1;d<=dim;d++){
+    const evs=dayEvts(d);const isSel=S.calSel===d;const isTd=ds(y,m,d)===todayStr;
+    cells+=`<div onclick="cSel(${d})" style="min-height:60px;padding:6px 8px;cursor:pointer;background:${isSel?'#eeeeec':'#fff'};border-right:.5px solid rgba(0,0,0,.07);border-bottom:.5px solid rgba(0,0,0,.07)">
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:${isTd?500:400};background:${isTd?'#1a1a1a':'transparent'};color:${isTd?'#fff':'#1a1a1a'}">${d}</span>
+      <div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px">
+        ${evs.slice(0,3).map(e=>{const ec=ECC[e.color]||ECC.blue;return`<span style="width:5px;height:5px;border-radius:50%;background:${ec.dot}"></span>`;}).join('')}
+        ${evs.length>3?`<span style="font-size:9px;color:#888">+${evs.length-3}</span>`:''}
+      </div>
+    </div>`;
+  }
+
+  let panel='';
+  if(S.calSel){
+    const evs=dayEvts(S.calSel);
+    panel=`<div class="cp" style="margin-top:1.2rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <p style="margin:0;font-weight:500;font-size:14px">${ff(ds(y,m,S.calSel))}</p>
+        <button class="bs" onclick="evAdd()"><i class="ti ti-plus"></i> Add event</button>
+      </div>
+      ${!evs.length?`<p style="margin:0;font-size:13px;color:#888">No events. Click "Add event" to schedule one.</p>`:
+        evs.map(e=>{const ec=ECC[e.color]||ECC.blue;return`<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-top:.5px solid rgba(0,0,0,.08)">
+          <span style="width:8px;height:8px;border-radius:50%;background:${ec.dot};margin-top:4px;flex-shrink:0"></span>
+          <div style="flex:1"><div style="display:flex;align-items:center;gap:6px">
+            <p style="margin:0;font-weight:500;font-size:13px">${x(e.title)}</p>
+            ${e.time?`<span style="font-size:11px;color:#888">${x(e.time)}</span>`:''}
+          </div>${e.description?`<p style="margin:2px 0 0;font-size:12px;color:#888">${x(e.description)}</p>`:''}</div>
+          <button class="bi" onclick="evDel('${e.id}')"><i class="ti ti-x"></i></button>
+        </div>`;}).join('')}
+    </div>`;
+  }
+
+  return`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
+    <h2 style="margin:0;font-size:18px;font-weight:500">${mn}</h2>
+    <div style="display:flex;gap:6px">
+      <button style="padding:6px 10px" onclick="cPrev()"><i class="ti ti-arrow-left"></i></button>
+      <button style="font-size:12px" onclick="cToday()">Today</button>
+      <button style="padding:6px 10px" onclick="cNext()"><i class="ti ti-arrow-right"></i></button>
+    </div>
+  </div>
+  <div class="card">
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);background:#f7f7f5;border-bottom:.5px solid rgba(0,0,0,.1)">
+      ${DAYS.map(d=>`<div style="text-align:center;font-size:11px;font-weight:500;color:#888;padding:8px 0;letter-spacing:.04em">${d}</div>`).join('')}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr)">${cells}</div>
+  </div>${panel}`;
+}
+function cSel(d){S.calSel=S.calSel===d?null:d;re();}
+function cPrev(){if(S.calMonth===0){S.calMonth=11;S.calYear--;}else S.calMonth--;re();}
+function cNext(){if(S.calMonth===11){S.calMonth=0;S.calYear++;}else S.calMonth++;re();}
+function cToday(){const t=new Date();S.calYear=t.getFullYear();S.calMonth=t.getMonth();re();}
+function evDel(id){S.events=S.events.filter(e=>e.id!==id);persist();re();}
+function evAdd(){S.form={_t:'event',title:'',description:'',time:'',color:'blue'};S.modal='event';re();}
+function evSave(){
+  const f=S.form;if(!f.title||!S.calSel)return;
+  S.events=[...S.events,{id:uid(),date:ds(S.calYear,S.calMonth,S.calSel),title:f.title,description:f.description,time:f.time,color:f.color}];
+  persist();S.modal=null;S.form={};re();
+}
+
+// ─── LEARNING ─────────────────────────────────────────────────────────────────
+function renderLearning(){
+  const comp=S.learning.completed||{};
+  const tt=S.learning.timetable||{};
+  const getPct=sid=>{const s=SUBS.find(v=>v.id===sid);if(!s)return 0;return Math.round(((comp[sid]||[]).length/s.topics.length)*100);};
+
+  const cards=SUBS.map(s=>{
+    const pct=getPct(s.id);const done=(comp[s.id]||[]).length;const on=S.learnActive===s.id;
+    return`<div onclick="lSub('${s.id}')" style="background:${on?s.bg:'#ebebea'};border-radius:8px;padding:12px 14px;cursor:pointer;border:.5px solid ${on?s.lite:'transparent'};transition:all .15s">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <p style="margin:0;font-size:13px;font-weight:500;color:${on?s.color:'#1a1a1a'}">${s.name}</p>
+        <span style="font-size:13px;font-weight:600;color:${s.color}">${pct}%</span>
+      </div>
+      <div style="background:rgba(0,0,0,.1);border-radius:999px;height:4px;overflow:hidden;margin-bottom:5px">
+        <div style="width:${pct}%;height:100%;background:${s.color};border-radius:999px"></div>
+      </div>
+      <p style="margin:0;font-size:11px;color:#888">${done}/${s.topics.length} topics</p>
+    </div>`;
+  }).join('');
+
+  let topics='';
+  if(S.learnActive){
+    const s=SUBS.find(v=>v.id===S.learnActive);
+    if(s){
+      topics=`<div style="border:.5px solid ${s.lite};border-radius:12px;padding:1rem;margin-bottom:1.5rem;background:${s.bg}44">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <p style="margin:0;font-weight:500;font-size:14px;color:${s.color}">${s.name} — Topics</p>
+          <button class="bi" onclick="lSub(null)"><i class="ti ti-x"></i></button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:5px">
+          ${s.topics.map((t,i)=>{
+            const done=(comp[s.id]||[]).includes(i);
+            return`<div onclick="lTopic('${s.id}',${i})" style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;background:${done?s.bg:'transparent'};border:.5px solid ${done?s.lite:'transparent'}">
+              <div style="width:16px;height:16px;border-radius:3px;border:1.5px solid ${done?s.color:'rgba(0,0,0,.28)'};background:${done?s.color:'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                ${done?'<i class="ti ti-check" style="font-size:10px;color:white"></i>':''}
+              </div>
+              <span style="font-size:13px;color:${done?s.color:'#1a1a1a'};text-decoration:${done?'line-through':'none'};opacity:${done?.75:1}">${x(t)}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }
+  }
+
+  const ttRows=SLOTS.map(slot=>`<tr><td style="font-size:11px;color:#888;padding:2px 4px;font-weight:500;white-space:nowrap">${slot}</td>
+    ${DAYS.map(day=>{
+      const k=`${day}_${slot}`;const sid=(tt[k]||'');const s=sid?SUBS.find(v=>v.id===sid):null;
+      return`<td style="padding:2px"><div onclick="lSlot('${day}','${slot}')" style="border-radius:8px;padding:5px 3px;min-height:30px;display:flex;align-items:center;justify-content:center;background:${s?s.bg:'#f0f0ee'};border:.5px solid ${s?s.lite:'rgba(0,0,0,.07)'};cursor:pointer">
+        ${s?`<span style="font-size:10px;font-weight:500;color:${s.color};white-space:nowrap">${s.short}</span>`:''}
+      </div></td>`;
+    }).join('')}
+  </tr>`).join('');
+
+  return`<h2 style="margin:0 0 .6rem;font-size:18px;font-weight:500">Learning tracker</h2>
+  <p style="margin:0 0 1rem;font-size:13px;color:#888">Click a subject to expand its topics. Check each topic off as you complete it.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;margin-bottom:1.5rem">${cards}</div>
+  ${topics}
+  <p style="margin:0 0 4px;font-weight:500;font-size:14px">Weekly timetable</p>
+  <p style="margin:0 0 10px;font-size:12px;color:#888">Click a cell to assign a subject. Click again to cycle through.</p>
+  <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:separate;border-spacing:2px;min-width:440px">
+      <thead><tr><th style="width:75px;font-size:11px;font-weight:500;color:#888;text-align:left;padding:3px 4px"></th>${DAYS.map(d=>`<th style="font-size:11px;font-weight:500;color:#888;text-align:center;padding:3px 2px">${d}</th>`).join('')}</tr></thead>
+      <tbody>${ttRows}</tbody>
+    </table>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
+    ${SUBS.map(s=>`<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 8px;border-radius:999px;background:${s.bg};color:${s.color}"><span style="width:5px;height:5px;border-radius:50%;background:${s.color}"></span>${s.short}</span>`).join('')}
+  </div>`;
+}
+function lSub(id){S.learnActive=S.learnActive===id?null:id;re();}
+function lTopic(sid,i){
+  const comp=S.learning.completed||{};
+  const prev=comp[sid]||[];
+  S.learning={...S.learning,completed:{...comp,[sid]:prev.includes(i)?prev.filter(v=>v!==i):[...prev,i]}};
+  persist();re();
+}
+function lSlot(day,slot){
+  const k=`${day}_${slot}`;const ids=['','python','dsa','devops','webdev','ai'];
+  const cur=(S.learning.timetable||{})[k]||'';
+  S.learning={...S.learning,timetable:{...(S.learning.timetable||{}),[k]:ids[(ids.indexOf(cur)+1)%ids.length]}};
+  persist();re();
+}
+
+// ─── TODO ─────────────────────────────────────────────────────────────────────
+function renderTodo(){
+  const filt=S.todos.filter(t=>S.tFilter==='All'||t.category===S.tFilter);
+  const pending=S.todos.filter(t=>!t.done).length;
+  const fbtns=['All',...TCATS].map(c=>{const cc=TCC[c];const on=S.tFilter===c;
+    return`<button onclick="S.tFilter='${c}';re()" style="font-size:12px;padding:3px 10px;border-radius:999px;background:${on?(cc?cc.bg:'#1a1a1a'):'transparent'};color:${on?(cc?cc.tx:'#fff'):'#888'};border:.5px solid ${on?'transparent':'rgba(0,0,0,.15)'};font-weight:${on?500:400}">${c}</button>`;
+  }).join('');
+
+  let rows='';
+  if(!filt.length){
+    rows=`<div class="empty"><i class="ti ti-list"></i><p style="margin:0;font-size:13px">${S.todos.length?'No tasks in this category.':'No tasks yet. Add your first one!'}</p></div>`;
+  }else{
+    rows=`<div class="card">${filt.map((t,i)=>{const cc=TCC[t.category]||TCC.General;
+      return`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:${i?'.5px solid rgba(0,0,0,.08)':'none'};background:${t.done?'#fafafa':'transparent'}">
+        <div onclick="tTog('${t.id}')" style="width:18px;height:18px;border-radius:4px;border:1.5px solid rgba(0,0,0,.28);background:${t.done?'#1a1a1a':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer">
+          ${t.done?'<i class="ti ti-check" style="font-size:11px;color:#fff"></i>':''}
+        </div>
+        <span style="flex:1;font-size:14px;color:${t.done?'#aaa':'#1a1a1a'};text-decoration:${t.done?'line-through':'none'}">${x(t.text)}</span>
+        <span style="font-size:11px;font-weight:500;padding:2px 8px;border-radius:999px;background:${cc.bg};color:${cc.tx};flex-shrink:0;white-space:nowrap">${t.category}</span>
+        <button class="bi" onclick="tDel('${t.id}')"><i class="ti ti-trash"></i></button>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  return`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.2rem">
+    <div><h2 style="margin:0;font-size:18px;font-weight:500">Todo & notes</h2><p style="margin:2px 0 0;font-size:13px;color:#666">${pending} pending · ${S.todos.filter(t=>t.done).length} done</p></div>
+  </div>
+  <div class="row" style="margin-bottom:1rem">
+    <input id="tinput" placeholder="Add a task or note… (Enter to add)" onkeydown="if(event.key==='Enter')tAdd()" style="flex:1;min-width:160px">
+    <select id="tcat" style="width:auto">${TCATS.map(c=>`<option value="${c}">${c}</option>`).join('')}</select>
+    <button class="bp" onclick="tAdd()" style="display:flex;align-items:center;gap:4px"><i class="ti ti-plus" style="font-size:14px"></i> Add</button>
+  </div>
+  <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:1rem">${fbtns}</div>
+  ${rows}`;
+}
+function tAdd(){
+  const inp=document.getElementById('tinput');const cat=document.getElementById('tcat');
+  if(!inp?.value.trim())return;
+  S.todos=[{id:uid(),text:inp.value.trim(),done:false,category:cat?.value||'General',createdAt:new Date().toISOString()},...S.todos];
+  persist();re();
+}
+function tTog(id){S.todos=S.todos.map(t=>t.id===id?{...t,done:!t.done}:t);persist();re();}
+function tDel(id){S.todos=S.todos.filter(t=>t.id!==id);persist();re();}
+
+// ─── PROGRESS ─────────────────────────────────────────────────────────────────
+function renderProgress(){
+  const cnt=JST.reduce((a,s)=>({...a,[s]:S.apps.filter(v=>v.status===s).length}),{});
+  const comp=S.learning.completed||{};
+  const getPct=sid=>{const s=SUBS.find(v=>v.id===sid);if(!s)return 0;return Math.round(((comp[sid]||[]).length/s.topics.length)*100);};
+  const total=SUBS.reduce((a,s)=>a+s.topics.length,0);
+  const done=SUBS.reduce((a,s)=>a+(comp[s.id]||[]).length,0);
+  const tdone=S.todos.filter(t=>t.done).length;
+  const upcoming=S.events.filter(e=>e.date>=new Date().toISOString().split('T')[0]).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,6);
+
+  const pipeline=!S.apps.length?`<p style="font-size:13px;color:#888;margin:0">No applications yet.</p>`:
+    JST.map(s=>{const c=JC[s];const n=cnt[s]||0;const p=S.apps.length?Math.round(n/S.apps.length*100):0;
+      return`<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:3px">
+        <span style="font-size:12px;display:flex;align-items:center;gap:5px"><span style="width:6px;height:6px;border-radius:50%;background:${c.dot};display:inline-block"></span>${s}</span>
+        <span style="font-size:12px;font-weight:500">${n}</span></div>
+        <div class="pt"><div class="pf" style="width:${p}%;background:${c.dot}"></div></div>
+      </div>`;
+    }).join('');
+
+  const todoBars=!S.todos.length?`<p style="font-size:13px;color:#888;margin:0">No tasks yet.</p>`:
+    TCATS.map(c=>{const ct=S.todos.filter(t=>t.category===c);if(!ct.length)return'';
+      const p=Math.round(ct.filter(t=>t.done).length/ct.length*100);
+      return pb(c,p,TCC[c]?.dot||'#888',`${ct.filter(t=>t.done).length}/${ct.length}`);
+    }).join('');
+
+  const ulist=!upcoming.length?`<p style="font-size:13px;color:#888;margin:0">No upcoming events.</p>`:
+    upcoming.map(e=>{const d=new Date(e.date+'T12:00:00');
+      return`<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
+        <div style="background:#f0f0ee;border-radius:8px;padding:4px 8px;text-align:center;flex-shrink:0;min-width:36px">
+          <p style="margin:0;font-size:10px;color:#888">${d.toLocaleDateString('en-US',{month:'short'})}</p>
+          <p style="margin:0;font-size:16px;font-weight:500;line-height:1">${d.getDate()}</p>
+        </div>
+        <div><p style="margin:0;font-size:13px;font-weight:500">${x(e.title)}</p>
+          ${e.time?`<p style="margin:0;font-size:11px;color:#888">${x(e.time)}</p>`:''}
+          ${e.description?`<p style="margin:2px 0 0;font-size:12px;color:#888">${x(e.description)}</p>`:''}
+        </div>
+      </div>`;
+    }).join('');
+
+  const ovPct=Math.round(done/total*100);
+  return`<h2 style="margin:0 0 1.2rem;font-size:18px;font-weight:500">Progress overview</h2>
+  <div class="row" style="margin-bottom:1.5rem">
+    ${sc('Applications sent',S.apps.length)}${sc('Learning overall',ovPct+'%','#3B6D11')}${sc('Tasks done',S.todos.length?Math.round(tdone/S.todos.length*100)+'%':'—','#3C3489')}${sc('Upcoming events',upcoming.length)}
+  </div>
+  <div class="ga">
+    <div class="cp"><p style="margin:0 0 1rem;font-weight:500;font-size:14px">Job application pipeline</p>${pipeline}</div>
+    <div class="cp"><p style="margin:0 0 1rem;font-weight:500;font-size:14px">Learning by subject</p>
+      ${SUBS.map(s=>pb(s.name,getPct(s.id),s.color)).join('')}
+      <div style="margin-top:12px;padding-top:10px;border-top:.5px solid rgba(0,0,0,.08)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:12px;font-weight:500">Overall</span><span style="font-size:12px;font-weight:500">${ovPct}%</span></div>
+        <div class="pt" style="height:6px"><div class="pf" style="width:${ovPct}%;background:#1a1a1a"></div></div>
+        <p style="margin:4px 0 0;font-size:11px;color:#888">${done} of ${total} topics completed</p>
+      </div>
+    </div>
+    <div class="cp"><p style="margin:0 0 1rem;font-weight:500;font-size:14px">Tasks by category</p>${todoBars}</div>
+    <div class="cp"><p style="margin:0 0 1rem;font-weight:500;font-size:14px">Upcoming events</p>${ulist}</div>
+  </div>`;
+}
+
+// ─── MODALS ───────────────────────────────────────────────────────────────────
+function renderModal(){
+  if(S.modal==='job')return renderJobModal();
+  if(S.modal==='event')return renderEvModal();
+  return'';
+}
+function closeModal(){S.modal=null;S.form={};re();}
+
+function renderJobModal(){
+  const f=S.form;const cs=f.contacts||[{name:'',designation:'',email:''}];
+  return`<div class="overlay" onclick="if(event.target===this)closeModal()">
+    <div class="mbox">
+      <div class="mhead"><h3>${f._e?'Edit application':'New application'}</h3><button onclick="closeModal()" style="border:none;background:none;font-size:20px;padding:2px 6px;color:#888"><i class="ti ti-x"></i></button></div>
+      <div style="display:grid;gap:12px">
+        <div class="g2">
+          <div><label>Company *</label><input value="${x(f.company||'')}" oninput="S.form.company=this.value" placeholder="e.g. Anthropic"></div>
+          <div><label>Position *</label><input value="${x(f.position||'')}" oninput="S.form.position=this.value" placeholder="e.g. Software Engineer"></div>
+        </div>
+        <div class="g2">
+          <div><label>Status</label><select onchange="S.form.status=this.value">${JST.map(s=>`<option value="${s}"${(f.status||'Applied')===s?' selected':''}>${s}</option>`).join('')}</select></div>
+          <div><label>Date applied</label><input type="date" value="${x(f.dateApplied||'')}" oninput="S.form.dateApplied=this.value"></div>
+        </div>
+        <div><label>Job URL</label><input value="${x(f.jobUrl||'')}" oninput="S.form.jobUrl=this.value" placeholder="https://..."></div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <label style="margin:0">People reached out to</label>
+            <button class="bs" onclick="cAdd()"><i class="ti ti-plus"></i> Add person</button>
+          </div>
+          ${cs.map((c,i)=>`<div style="border:.5px solid rgba(0,0,0,.12);border-radius:8px;padding:8px 10px;margin-bottom:6px;display:grid;gap:6px">
+            <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center">
+              <input value="${x(c.name)}" oninput="cUpd(${i},'name',this.value)" placeholder="Full name">
+              <input value="${x(c.designation)}" oninput="cUpd(${i},'designation',this.value)" placeholder="Designation">
+              <button onclick="cDel(${i})" ${cs.length===1?'disabled':''} style="border:none;background:none;color:#bbb;padding:2px 4px;font-size:16px;flex-shrink:0"><i class="ti ti-trash"></i></button>
+            </div>
+            <input value="${x(c.email)}" oninput="cUpd(${i},'email',this.value)" placeholder="Email (optional)">
+          </div>`).join('')}
+        </div>
+        <div><label>Notes</label><textarea oninput="S.form.notes=this.value" rows="3" style="resize:vertical;line-height:1.5" placeholder="Interview prep, referrals…">${x(f.notes||'')}</textarea></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+          <button onclick="closeModal()">Cancel</button>
+          <button class="bp" onclick="jSave()">${f._e?'Save changes':'Add application'}</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderEvModal(){
+  const f=S.form;
+  return`<div class="overlay" onclick="if(event.target===this)closeModal()">
+    <div class="mbox sm">
+      <div class="mhead"><h3>Add event</h3><button onclick="closeModal()" style="border:none;background:none;font-size:20px;padding:2px 6px;color:#888"><i class="ti ti-x"></i></button></div>
+      <div style="display:grid;gap:10px">
+        <div><label>Title *</label><input value="${x(f.title||'')}" oninput="S.form.title=this.value" placeholder="e.g. Mock interview, Study session"></div>
+        <div class="g2">
+          <div><label>Time</label><input type="time" value="${x(f.time||'')}" oninput="S.form.time=this.value"></div>
+          <div><label>Color</label><select onchange="S.form.color=this.value">${Object.keys(ECC).map(c=>`<option value="${c}"${(f.color||'blue')===c?' selected':''}>${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}</select></div>
+        </div>
+        <div><label>Description</label><textarea oninput="S.form.description=this.value" rows="2" style="resize:none;line-height:1.5" placeholder="Optional notes…">${x(f.description||'')}</textarea></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+          <button onclick="closeModal()">Cancel</button>
+          <button class="bp" onclick="evSave()">Add event</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function renderTab(){
+  if(S.tab==='jobs')return renderJobs();
+  if(S.tab==='calendar')return renderCalendar();
+  if(S.tab==='learning')return renderLearning();
+  if(S.tab==='todo')return renderTodo();
+  if(S.tab==='progress')return renderProgress();
+}
+
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
+hydrate();re();
+</script>
+</body>
+</html>
