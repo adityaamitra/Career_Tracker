@@ -34,24 +34,24 @@ label{font-size:12px;color:#666;display:block;margin-bottom:4px}
 .empty{text-align:center;padding:3rem 1rem;color:#888}
 .empty i{font-size:32px;display:block;margin-bottom:12px;opacity:.35}
 .bp{background:#1a1a1a;color:#fff;border:none;font-weight:500}
+.bp:hover{background:#333}
 .bd{color:#A32D2D;border-color:rgba(163,45,45,.3)}
 .bs{font-size:12px;padding:4px 12px;display:inline-flex;align-items:center;gap:4px}
 .bi{border:none;background:none;color:#bbb;padding:2px 4px;font-size:16px}
-.sep{border:none;border-top:.5px solid rgba(0,0,0,.08);margin:0}
 a{color:#185FA5;text-decoration:none}
 a:hover{text-decoration:underline}
+/* Login/Setup screen */
+.auth-wrap{position:fixed;inset:0;background:#f5f5f3;display:flex;align-items:center;justify-content:center;z-index:1000;padding:1rem}
+.auth-card{background:#fff;border:.5px solid rgba(0,0,0,.12);border-radius:16px;padding:2.5rem 2rem;width:100%;max-width:380px}
+.auth-icon{width:54px;height:54px;border-radius:14px;background:#ebebea;display:flex;align-items:center;justify-content:center;margin:0 auto 1.2rem}
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:42px}
+.pw-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:none;color:#aaa;font-size:17px;padding:2px;cursor:pointer}
 @media(max-width:600px){#wrap{padding:1rem}.g2{grid-template-columns:1fr}.tl{display:none}}
 </style>
 </head>
 <body>
-<div id="wrap">
-  <div style="margin-bottom:1.5rem">
-    <h1 style="margin:0 0 4px;font-size:22px;font-weight:500">Dashboard</h1>
-    <p style="margin:0;font-size:13px;color:#888">Career tracking · Learning · Calendar · Tasks</p>
-  </div>
-  <div class="tabs" id="tabs"></div>
-  <div id="main"></div>
-</div>
+<div id="wrap"></div>
 <div id="mroot"></div>
 
 <script>
@@ -59,16 +59,11 @@ a:hover{text-decoration:underline}
 const JST=['Applied','Phone Screen','Interviewing','Offer','Rejected','Ghosted'];
 const JC={Applied:{bg:'#E6F1FB',tx:'#0C447C',dot:'#378ADD'},'Phone Screen':{bg:'#EEEDFE',tx:'#3C3489',dot:'#7F77DD'},Interviewing:{bg:'#FAEEDA',tx:'#633806',dot:'#EF9F27'},Offer:{bg:'#EAF3DE',tx:'#27500A',dot:'#639922'},Rejected:{bg:'#FCEBEB',tx:'#791F1F',dot:'#E24B4A'},Ghosted:{bg:'#F1EFE8',tx:'#444441',dot:'#888780'}};
 const SUBS=[
-  {id:'python',name:'Python',short:'Python',color:'#3B6D11',bg:'#EAF3DE',lite:'#C0DD97',
-   topics:['Variables & Data Types','Control Flow','Functions','OOP','Modules & Packages','File I/O','Error Handling','List Comprehensions','Decorators','Async/Await']},
-  {id:'dsa',name:'DSA in Python',short:'DSA',color:'#0C447C',bg:'#E6F1FB',lite:'#B5D4F4',
-   topics:['Arrays & Lists','Linked Lists','Stacks & Queues','Hash Tables','Trees & BST','Graphs','Sorting Algorithms','Searching','Dynamic Programming','Recursion']},
-  {id:'devops',name:'DevOps',short:'DevOps',color:'#633806',bg:'#FAEEDA',lite:'#FAC775',
-   topics:['Linux Basics','Shell Scripting','Git & Version Control','Docker','Kubernetes','CI/CD Pipelines','AWS Basics','Monitoring & Logging','Infrastructure as Code','Networking']},
-  {id:'webdev',name:'Web Dev',short:'Web Dev',color:'#3C3489',bg:'#EEEDFE',lite:'#CECBF6',
-   topics:['HTML & CSS','JavaScript','React','REST APIs','Node.js','SQL Databases','Authentication','Deployment','TypeScript','Testing']},
-  {id:'ai',name:'AI/ML',short:'AI/ML',color:'#791F1F',bg:'#FCEBEB',lite:'#F7C1C1',
-   topics:['Python for ML','NumPy & Pandas','Data Visualization','Scikit-learn','Regression & Classification','Neural Networks','Deep Learning (PyTorch)','NLP Basics','Computer Vision','LLMs & Prompting']},
+  {id:'python',name:'Python',short:'Python',color:'#3B6D11',bg:'#EAF3DE',lite:'#C0DD97',topics:['Variables & Data Types','Control Flow','Functions','OOP','Modules & Packages','File I/O','Error Handling','List Comprehensions','Decorators','Async/Await']},
+  {id:'dsa',name:'DSA in Python',short:'DSA',color:'#0C447C',bg:'#E6F1FB',lite:'#B5D4F4',topics:['Arrays & Lists','Linked Lists','Stacks & Queues','Hash Tables','Trees & BST','Graphs','Sorting Algorithms','Searching','Dynamic Programming','Recursion']},
+  {id:'devops',name:'DevOps',short:'DevOps',color:'#633806',bg:'#FAEEDA',lite:'#FAC775',topics:['Linux Basics','Shell Scripting','Git & Version Control','Docker','Kubernetes','CI/CD Pipelines','AWS Basics','Monitoring & Logging','Infrastructure as Code','Networking']},
+  {id:'webdev',name:'Web Dev',short:'Web Dev',color:'#3C3489',bg:'#EEEDFE',lite:'#CECBF6',topics:['HTML & CSS','JavaScript','React','REST APIs','Node.js','SQL Databases','Authentication','Deployment','TypeScript','Testing']},
+  {id:'ai',name:'AI/ML',short:'AI/ML',color:'#791F1F',bg:'#FCEBEB',lite:'#F7C1C1',topics:['Python for ML','NumPy & Pandas','Data Visualization','Scikit-learn','Regression & Classification','Neural Networks','Deep Learning (PyTorch)','NLP Basics','Computer Vision','LLMs & Prompting']},
 ];
 const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const SLOTS=['Morning','Afternoon','Evening','Night'];
@@ -77,15 +72,117 @@ const TCC={General:{bg:'#F1EFE8',tx:'#444441',dot:'#888780'},'Job Search':{bg:'#
 const ECC={blue:{bg:'#E6F1FB',tx:'#0C447C',dot:'#378ADD'},green:{bg:'#EAF3DE',tx:'#27500A',dot:'#639922'},amber:{bg:'#FAEEDA',tx:'#633806',dot:'#EF9F27'},red:{bg:'#FCEBEB',tx:'#791F1F',dot:'#E24B4A'},purple:{bg:'#EEEDFE',tx:'#3C3489',dot:'#7F77DD'}};
 const TABS=[{id:'jobs',icon:'ti-briefcase',label:'Jobs'},{id:'calendar',icon:'ti-calendar',label:'Calendar'},{id:'learning',icon:'ti-book',label:'Learning'},{id:'todo',icon:'ti-list',label:'Todo'},{id:'progress',icon:'ti-chart-bar',label:'Progress'}];
 
-// ─── STATE ────────────────────────────────────────────────────────────────────
+// ─── AUTH STATE ───────────────────────────────────────────────────────────────
+const AUTH={in:false};
+
+async function sha256(pw){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('cdash:'+pw));
+  return[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function checkAuth(){
+  if(AUTH.in)return'ok';
+  if(!localStorage.getItem('d-pw'))return'setup';
+  if(localStorage.getItem('d-sess')==='1'){AUTH.in=true;return'ok';}
+  return'login';
+}
+async function doLogin(){
+  const pw=document.getElementById('lpw')?.value||'';
+  if(!pw)return;
+  const hash=await sha256(pw);
+  if(hash===localStorage.getItem('d-pw')){
+    AUTH.in=true;localStorage.setItem('d-sess','1');re();
+  }else{
+    const e=document.getElementById('lerr');
+    if(e){e.style.display='block';e.textContent='Incorrect password. Try again.';}
+  }
+}
+async function doSetup(){
+  const pw=document.getElementById('spw')?.value||'';
+  const pw2=document.getElementById('spw2')?.value||'';
+  const e=document.getElementById('serr');
+  if(pw.length<4){if(e)e.textContent='Password must be at least 4 characters.';return;}
+  if(pw!==pw2){if(e)e.textContent='Passwords do not match.';return;}
+  const hash=await sha256(pw);
+  localStorage.setItem('d-pw',hash);localStorage.setItem('d-sess','1');
+  AUTH.in=true;re();
+}
+function doLogout(){
+  if(!confirm('Sign out of your dashboard?'))return;
+  AUTH.in=false;localStorage.removeItem('d-sess');re();
+}
+function doReset(){
+  if(!confirm('⚠️ This will permanently delete ALL your data and reset your password.\n\nType "reset" in the next prompt to confirm.'))return;
+  const c=prompt('Type "reset" to confirm:');
+  if(c==='reset'){localStorage.clear();AUTH.in=false;re();}
+}
+function togglePw(id,btn){
+  const inp=document.getElementById(id);if(!inp)return;
+  inp.type=inp.type==='password'?'text':'password';
+  btn.innerHTML=inp.type==='password'?'<i class="ti ti-eye"></i>':'<i class="ti ti-eye-off"></i>';
+}
+
+// ─── AUTH SCREENS ─────────────────────────────────────────────────────────────
+function renderLogin(){
+  return`<div class="auth-wrap">
+    <div class="auth-card">
+      <div style="text-align:center;margin-bottom:1.5rem">
+        <div class="auth-icon"><i class="ti ti-lock" style="font-size:26px;color:#1a1a1a"></i></div>
+        <h2 style="margin:0 0 6px;font-size:20px;font-weight:500">Welcome back</h2>
+        <p style="margin:0;font-size:13px;color:#888">Enter your password to access your dashboard.</p>
+      </div>
+      <div style="display:grid;gap:10px">
+        <div class="pw-wrap">
+          <input type="password" id="lpw" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+          <button class="pw-toggle" onclick="togglePw('lpw',this)" tabindex="-1"><i class="ti ti-eye"></i></button>
+        </div>
+        <div id="lerr" style="font-size:12px;color:#A32D2D;display:none;padding:8px 10px;background:#FCEBEB;border-radius:6px"></div>
+        <button class="bp" onclick="doLogin()" style="width:100%;padding:10px;justify-content:center;font-size:14px">
+          <i class="ti ti-arrow-right" style="font-size:15px;vertical-align:-2px;margin-right:4px"></i>Sign in
+        </button>
+      </div>
+      <hr style="border:none;border-top:.5px solid rgba(0,0,0,.08);margin:1.5rem 0">
+      <p style="margin:0;font-size:12px;color:#bbb;text-align:center;line-height:1.7">
+        Your data is stored privately in this browser.<br>
+        <a href="#" onclick="doReset();return false" style="color:#ccc">Forgot password / Reset all data</a>
+      </p>
+    </div>
+  </div>`;
+}
+function renderSetup(){
+  return`<div class="auth-wrap">
+    <div class="auth-card">
+      <div style="text-align:center;margin-bottom:1.5rem">
+        <div class="auth-icon"><i class="ti ti-shield-check" style="font-size:26px;color:#1a1a1a"></i></div>
+        <h2 style="margin:0 0 8px;font-size:20px;font-weight:500">Set up your dashboard</h2>
+        <p style="margin:0;font-size:13px;color:#888;line-height:1.6">Create a password so only you can access this dashboard. It's hashed and stored only in your browser.</p>
+      </div>
+      <div style="display:grid;gap:8px">
+        <div class="pw-wrap">
+          <input type="password" id="spw" placeholder="Create a password (min. 4 characters)">
+          <button class="pw-toggle" onclick="togglePw('spw',this)" tabindex="-1"><i class="ti ti-eye"></i></button>
+        </div>
+        <div class="pw-wrap">
+          <input type="password" id="spw2" placeholder="Confirm password" onkeydown="if(event.key==='Enter')doSetup()">
+          <button class="pw-toggle" onclick="togglePw('spw2',this)" tabindex="-1"><i class="ti ti-eye"></i></button>
+        </div>
+        <div id="serr" style="font-size:12px;color:#A32D2D;min-height:18px;padding-left:2px"></div>
+        <button class="bp" onclick="doSetup()" style="width:100%;padding:10px;justify-content:center;font-size:14px">
+          <i class="ti ti-rocket" style="font-size:15px;vertical-align:-2px;margin-right:4px"></i>Create password &amp; get started
+        </button>
+      </div>
+      <p style="margin:1.2rem 0 0;font-size:12px;color:#bbb;text-align:center;line-height:1.7">Password is SHA-256 hashed locally. Your data never leaves this device.</p>
+    </div>
+  </div>`;
+}
+
+// ─── APP STATE ────────────────────────────────────────────────────────────────
 const S={
   tab:'jobs',
   apps:[],events:[],todos:[],
   learning:{completed:{},timetable:{}},
   jFilter:'All',jSearch:'',jOpen:null,
   calYear:new Date().getFullYear(),calMonth:new Date().getMonth(),calSel:null,
-  learnActive:null,
-  tFilter:'All',
+  learnActive:null,tFilter:'All',
   modal:null,form:{}
 };
 
@@ -95,7 +192,6 @@ const x=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g
 const fd=d=>{try{return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});}catch{return d;}};
 const ff=d=>{try{return new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});}catch{return d;}};
 const ds=(y,m,d)=>`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-
 function persist(){
   try{localStorage.setItem('d-apps',JSON.stringify(S.apps));}catch{}
   try{localStorage.setItem('d-events',JSON.stringify(S.events));}catch{}
@@ -109,19 +205,39 @@ function hydrate(){
   try{const v=localStorage.getItem('d-learn');if(v)S.learning=JSON.parse(v);}catch{}
 }
 
+// ─── MAIN RENDER ──────────────────────────────────────────────────────────────
 function re(){
+  const auth=checkAuth();
+  if(auth!=='ok'){
+    document.getElementById('wrap').innerHTML='';
+    document.getElementById('mroot').innerHTML=auth==='setup'?renderSetup():renderLogin();
+    setTimeout(()=>{document.getElementById('lpw')?.focus();document.getElementById('spw')?.focus();},80);
+    return;
+  }
+  document.getElementById('mroot').innerHTML=S.modal?renderModal():'';
+  document.getElementById('wrap').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:10px">
+      <div>
+        <h1 style="margin:0 0 4px;font-size:22px;font-weight:500">Dashboard</h1>
+        <p style="margin:0;font-size:13px;color:#888">Career tracking · Learning · Calendar · Tasks</p>
+      </div>
+      <button onclick="doLogout()" style="font-size:12px;padding:6px 12px;display:flex;align-items:center;gap:5px;color:#888;border-color:rgba(0,0,0,.15)">
+        <i class="ti ti-logout" style="font-size:14px"></i> Sign out
+      </button>
+    </div>
+    <div class="tabs" id="tabs"></div>
+    <div id="main"></div>`;
   document.getElementById('tabs').innerHTML=TABS.map(t=>`<button class="tbtn${S.tab===t.id?' on':''}" onclick="go('${t.id}')"><i class="ti ${t.icon}"></i><span class="tl">${t.label}</span></button>`).join('');
   document.getElementById('main').innerHTML=renderTab();
-  document.getElementById('mroot').innerHTML=S.modal?renderModal():'';
 }
 function go(id){S.tab=id;re();}
 
-// ─── SHARED ───────────────────────────────────────────────────────────────────
+// ─── SHARED COMPONENTS ────────────────────────────────────────────────────────
 function badge(st){const c=JC[st]||JC.Applied;return`<span style="display:inline-flex;align-items:center;gap:5px;background:${c.bg};color:${c.tx};font-size:12px;font-weight:500;padding:3px 10px;border-radius:999px"><span style="width:6px;height:6px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>${x(st)}</span>`;}
 function sc(label,val,color){return`<div class="sc"><p style="font-size:12px;color:#666;margin:0 0 3px;letter-spacing:.03em">${label}</p><p style="font-size:26px;font-weight:500;margin:0;color:${color||'#1a1a1a'}">${val}</p></div>`;}
 function pb(label,pct,color,sub){return`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:13px">${x(label)}</span><span style="font-size:13px;font-weight:500;color:${color||'#1a1a1a'}">${sub||pct+'%'}</span></div><div class="pt"><div class="pf" style="width:${pct}%;background:${color||'#1a1a1a'}"></div></div></div>`;}
 
-// ─── JOBS ─────────────────────────────────────────────────────────────────────
+// ─── JOBS TAB ─────────────────────────────────────────────────────────────────
 function renderJobs(){
   const filt=S.apps.filter(a=>{
     if(S.jFilter!=='All'&&a.status!==S.jFilter)return false;
@@ -129,7 +245,6 @@ function renderJobs(){
     return!q||a.company.toLowerCase().includes(q)||a.position.toLowerCase().includes(q);
   });
   const cnt=JST.reduce((a,s)=>({...a,[s]:S.apps.filter(v=>v.status===s).length}),{});
-
   let list='';
   if(!filt.length){
     list=`<div class="empty"><i class="ti ti-briefcase"></i><p style="margin:0;font-size:14px">${S.apps.length?'No results match your filters.':'No applications yet — add your first one!'}</p></div>`;
@@ -158,8 +273,7 @@ function renderJobs(){
               ${contacts.map(c=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
                 <div style="width:28px;height:28px;border-radius:50%;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:#0C447C;flex-shrink:0">${x(c.name.slice(0,2).toUpperCase())}</div>
                 <div><p style="margin:0;font-size:13px;font-weight:500">${x(c.name)}</p>${c.designation?`<p style="margin:0;font-size:11px;color:#666">${x(c.designation)}</p>`:''}${c.email?`<p style="margin:0;font-size:11px;color:#185FA5">${x(c.email)}</p>`:''}</div>
-              </div>`).join('')}
-            </div>`:''}
+              </div>`).join('')}</div>`:''}
             ${a.notes?`<div><p style="font-size:11px;color:#888;margin:0 0 4px;text-transform:uppercase;letter-spacing:.05em">Notes</p><p style="font-size:13px;margin:0;line-height:1.6">${x(a.notes)}</p></div>`:''}
           </div>
           <div style="display:flex;gap:8px;align-items:center;padding-top:4px">
@@ -172,7 +286,6 @@ function renderJobs(){
       </div>`;
     }).join('')}</div>`;
   }
-
   return`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.2rem;flex-wrap:wrap;gap:10px">
     <div><h2 style="margin:0;font-size:18px;font-weight:500">Applications</h2><p style="margin:2px 0 0;font-size:13px;color:#666">${S.apps.length} total tracked</p></div>
     <button class="bp" onclick="jAdd()" style="display:flex;align-items:center;gap:6px;padding:8px 16px"><i class="ti ti-plus" style="font-size:16px"></i> New application</button>
@@ -184,8 +297,7 @@ function renderJobs(){
     <div style="position:relative;flex:1;min-width:160px"><i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:15px;color:#aaa;pointer-events:none"></i>
       <input id="jsearch" value="${x(S.jSearch)}" oninput="S.jSearch=this.value;rj()" placeholder="Search company or role…" style="padding-left:32px"></div>
     <select onchange="S.jFilter=this.value;rj()" style="width:auto"><option value="All"${S.jFilter==='All'?' selected':''}>All statuses</option>${JST.map(s=>`<option value="${s}"${S.jFilter===s?' selected':''}>${s}</option>`).join('')}</select>
-  </div>
-  ${list}`;
+  </div>${list}`;
 }
 function rj(){document.getElementById('main').innerHTML=renderJobs();const e=document.getElementById('jsearch');if(e){e.focus();const l=e.value.length;e.setSelectionRange(l,l);}}
 function jOpen(id){S.jOpen=S.jOpen===id?null:id;re();}
@@ -202,7 +314,7 @@ function cAdd(){S.form.contacts.push({name:'',designation:'',email:''});re();}
 function cDel(i){if(S.form.contacts.length>1){S.form.contacts.splice(i,1);re();}}
 function cUpd(i,k,v){S.form.contacts[i][k]=v;}
 
-// ─── CALENDAR ─────────────────────────────────────────────────────────────────
+// ─── CALENDAR TAB ─────────────────────────────────────────────────────────────
 function renderCalendar(){
   const{calYear:y,calMonth:m}=S;
   const today=new Date();
@@ -211,7 +323,6 @@ function renderCalendar(){
   const fd0=(()=>{let d=new Date(y,m,1).getDay();return d===0?6:d-1;})();
   const mn=new Date(y,m,1).toLocaleDateString('en-US',{month:'long',year:'numeric'});
   const dayEvts=d=>S.events.filter(e=>e.date===ds(y,m,d));
-
   let cells='';
   for(let i=0;i<fd0;i++)cells+=`<div style="min-height:60px;border-right:.5px solid rgba(0,0,0,.07);border-bottom:.5px solid rgba(0,0,0,.07);background:#fafaf8"></div>`;
   for(let d=1;d<=dim;d++){
@@ -224,7 +335,6 @@ function renderCalendar(){
       </div>
     </div>`;
   }
-
   let panel='';
   if(S.calSel){
     const evs=dayEvts(S.calSel);
@@ -244,7 +354,6 @@ function renderCalendar(){
         </div>`;}).join('')}
     </div>`;
   }
-
   return`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
     <h2 style="margin:0;font-size:18px;font-weight:500">${mn}</h2>
     <div style="display:flex;gap:6px">
@@ -272,12 +381,11 @@ function evSave(){
   persist();S.modal=null;S.form={};re();
 }
 
-// ─── LEARNING ─────────────────────────────────────────────────────────────────
+// ─── LEARNING TAB ─────────────────────────────────────────────────────────────
 function renderLearning(){
   const comp=S.learning.completed||{};
   const tt=S.learning.timetable||{};
   const getPct=sid=>{const s=SUBS.find(v=>v.id===sid);if(!s)return 0;return Math.round(((comp[sid]||[]).length/s.topics.length)*100);};
-
   const cards=SUBS.map(s=>{
     const pct=getPct(s.id);const done=(comp[s.id]||[]).length;const on=S.learnActive===s.id;
     return`<div onclick="lSub('${s.id}')" style="background:${on?s.bg:'#ebebea'};border-radius:8px;padding:12px 14px;cursor:pointer;border:.5px solid ${on?s.lite:'transparent'};transition:all .15s">
@@ -285,100 +393,70 @@ function renderLearning(){
         <p style="margin:0;font-size:13px;font-weight:500;color:${on?s.color:'#1a1a1a'}">${s.name}</p>
         <span style="font-size:13px;font-weight:600;color:${s.color}">${pct}%</span>
       </div>
-      <div style="background:rgba(0,0,0,.1);border-radius:999px;height:4px;overflow:hidden;margin-bottom:5px">
-        <div style="width:${pct}%;height:100%;background:${s.color};border-radius:999px"></div>
-      </div>
+      <div style="background:rgba(0,0,0,.1);border-radius:999px;height:4px;overflow:hidden;margin-bottom:5px"><div style="width:${pct}%;height:100%;background:${s.color};border-radius:999px"></div></div>
       <p style="margin:0;font-size:11px;color:#888">${done}/${s.topics.length} topics</p>
     </div>`;
   }).join('');
-
   let topics='';
   if(S.learnActive){
     const s=SUBS.find(v=>v.id===S.learnActive);
-    if(s){
-      topics=`<div style="border:.5px solid ${s.lite};border-radius:12px;padding:1rem;margin-bottom:1.5rem;background:${s.bg}44">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <p style="margin:0;font-weight:500;font-size:14px;color:${s.color}">${s.name} — Topics</p>
-          <button class="bi" onclick="lSub(null)"><i class="ti ti-x"></i></button>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:5px">
-          ${s.topics.map((t,i)=>{
-            const done=(comp[s.id]||[]).includes(i);
-            return`<div onclick="lTopic('${s.id}',${i})" style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;background:${done?s.bg:'transparent'};border:.5px solid ${done?s.lite:'transparent'}">
-              <div style="width:16px;height:16px;border-radius:3px;border:1.5px solid ${done?s.color:'rgba(0,0,0,.28)'};background:${done?s.color:'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                ${done?'<i class="ti ti-check" style="font-size:10px;color:white"></i>':''}
-              </div>
-              <span style="font-size:13px;color:${done?s.color:'#1a1a1a'};text-decoration:${done?'line-through':'none'};opacity:${done?.75:1}">${x(t)}</span>
-            </div>`;
-          }).join('')}
-        </div>
-      </div>`;
-    }
+    if(s){topics=`<div style="border:.5px solid ${s.lite};border-radius:12px;padding:1rem;margin-bottom:1.5rem;background:${s.bg}44">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <p style="margin:0;font-weight:500;font-size:14px;color:${s.color}">${s.name} — Topics</p>
+        <button class="bi" onclick="lSub(null)"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:5px">
+        ${s.topics.map((t,i)=>{const done=(comp[s.id]||[]).includes(i);
+          return`<div onclick="lTopic('${s.id}',${i})" style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;background:${done?s.bg:'transparent'};border:.5px solid ${done?s.lite:'transparent'}">
+            <div style="width:16px;height:16px;border-radius:3px;border:1.5px solid ${done?s.color:'rgba(0,0,0,.28)'};background:${done?s.color:'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              ${done?'<i class="ti ti-check" style="font-size:10px;color:white"></i>':''}
+            </div>
+            <span style="font-size:13px;color:${done?s.color:'#1a1a1a'};text-decoration:${done?'line-through':'none'};opacity:${done?.75:1}">${x(t)}</span>
+          </div>`;}).join('')}
+      </div>
+    </div>`;}
   }
-
   const ttRows=SLOTS.map(slot=>`<tr><td style="font-size:11px;color:#888;padding:2px 4px;font-weight:500;white-space:nowrap">${slot}</td>
-    ${DAYS.map(day=>{
-      const k=`${day}_${slot}`;const sid=(tt[k]||'');const s=sid?SUBS.find(v=>v.id===sid):null;
+    ${DAYS.map(day=>{const k=`${day}_${slot}`;const sid=(tt[k]||'');const s=sid?SUBS.find(v=>v.id===sid):null;
       return`<td style="padding:2px"><div onclick="lSlot('${day}','${slot}')" style="border-radius:8px;padding:5px 3px;min-height:30px;display:flex;align-items:center;justify-content:center;background:${s?s.bg:'#f0f0ee'};border:.5px solid ${s?s.lite:'rgba(0,0,0,.07)'};cursor:pointer">
         ${s?`<span style="font-size:10px;font-weight:500;color:${s.color};white-space:nowrap">${s.short}</span>`:''}
-      </div></td>`;
-    }).join('')}
-  </tr>`).join('');
-
+      </div></td>`;}).join('')}</tr>`).join('');
   return`<h2 style="margin:0 0 .6rem;font-size:18px;font-weight:500">Learning tracker</h2>
   <p style="margin:0 0 1rem;font-size:13px;color:#888">Click a subject to expand its topics. Check each topic off as you complete it.</p>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;margin-bottom:1.5rem">${cards}</div>
   ${topics}
   <p style="margin:0 0 4px;font-weight:500;font-size:14px">Weekly timetable</p>
-  <p style="margin:0 0 10px;font-size:12px;color:#888">Click a cell to assign a subject. Click again to cycle through.</p>
-  <div style="overflow-x:auto">
-    <table style="width:100%;border-collapse:separate;border-spacing:2px;min-width:440px">
-      <thead><tr><th style="width:75px;font-size:11px;font-weight:500;color:#888;text-align:left;padding:3px 4px"></th>${DAYS.map(d=>`<th style="font-size:11px;font-weight:500;color:#888;text-align:center;padding:3px 2px">${d}</th>`).join('')}</tr></thead>
-      <tbody>${ttRows}</tbody>
-    </table>
-  </div>
+  <p style="margin:0 0 10px;font-size:12px;color:#888">Click a cell to assign a subject. Click again to cycle through all subjects.</p>
+  <div style="overflow-x:auto"><table style="width:100%;border-collapse:separate;border-spacing:2px;min-width:440px">
+    <thead><tr><th style="width:75px;font-size:11px;font-weight:500;color:#888;text-align:left;padding:3px 4px"></th>${DAYS.map(d=>`<th style="font-size:11px;font-weight:500;color:#888;text-align:center;padding:3px 2px">${d}</th>`).join('')}</tr></thead>
+    <tbody>${ttRows}</tbody>
+  </table></div>
   <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
     ${SUBS.map(s=>`<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 8px;border-radius:999px;background:${s.bg};color:${s.color}"><span style="width:5px;height:5px;border-radius:50%;background:${s.color}"></span>${s.short}</span>`).join('')}
   </div>`;
 }
 function lSub(id){S.learnActive=S.learnActive===id?null:id;re();}
-function lTopic(sid,i){
-  const comp=S.learning.completed||{};
-  const prev=comp[sid]||[];
-  S.learning={...S.learning,completed:{...comp,[sid]:prev.includes(i)?prev.filter(v=>v!==i):[...prev,i]}};
-  persist();re();
-}
-function lSlot(day,slot){
-  const k=`${day}_${slot}`;const ids=['','python','dsa','devops','webdev','ai'];
-  const cur=(S.learning.timetable||{})[k]||'';
-  S.learning={...S.learning,timetable:{...(S.learning.timetable||{}),[k]:ids[(ids.indexOf(cur)+1)%ids.length]}};
-  persist();re();
-}
+function lTopic(sid,i){const comp=S.learning.completed||{};const prev=comp[sid]||[];S.learning={...S.learning,completed:{...comp,[sid]:prev.includes(i)?prev.filter(v=>v!==i):[...prev,i]}};persist();re();}
+function lSlot(day,slot){const k=`${day}_${slot}`;const ids=['','python','dsa','devops','webdev','ai'];const cur=(S.learning.timetable||{})[k]||'';S.learning={...S.learning,timetable:{...(S.learning.timetable||{}),[k]:ids[(ids.indexOf(cur)+1)%ids.length]}};persist();re();}
 
-// ─── TODO ─────────────────────────────────────────────────────────────────────
+// ─── TODO TAB ─────────────────────────────────────────────────────────────────
 function renderTodo(){
   const filt=S.todos.filter(t=>S.tFilter==='All'||t.category===S.tFilter);
   const pending=S.todos.filter(t=>!t.done).length;
   const fbtns=['All',...TCATS].map(c=>{const cc=TCC[c];const on=S.tFilter===c;
     return`<button onclick="S.tFilter='${c}';re()" style="font-size:12px;padding:3px 10px;border-radius:999px;background:${on?(cc?cc.bg:'#1a1a1a'):'transparent'};color:${on?(cc?cc.tx:'#fff'):'#888'};border:.5px solid ${on?'transparent':'rgba(0,0,0,.15)'};font-weight:${on?500:400}">${c}</button>`;
   }).join('');
-
   let rows='';
-  if(!filt.length){
-    rows=`<div class="empty"><i class="ti ti-list"></i><p style="margin:0;font-size:13px">${S.todos.length?'No tasks in this category.':'No tasks yet. Add your first one!'}</p></div>`;
-  }else{
-    rows=`<div class="card">${filt.map((t,i)=>{const cc=TCC[t.category]||TCC.General;
-      return`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:${i?'.5px solid rgba(0,0,0,.08)':'none'};background:${t.done?'#fafafa':'transparent'}">
-        <div onclick="tTog('${t.id}')" style="width:18px;height:18px;border-radius:4px;border:1.5px solid rgba(0,0,0,.28);background:${t.done?'#1a1a1a':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer">
-          ${t.done?'<i class="ti ti-check" style="font-size:11px;color:#fff"></i>':''}
-        </div>
-        <span style="flex:1;font-size:14px;color:${t.done?'#aaa':'#1a1a1a'};text-decoration:${t.done?'line-through':'none'}">${x(t.text)}</span>
-        <span style="font-size:11px;font-weight:500;padding:2px 8px;border-radius:999px;background:${cc.bg};color:${cc.tx};flex-shrink:0;white-space:nowrap">${t.category}</span>
-        <button class="bi" onclick="tDel('${t.id}')"><i class="ti ti-trash"></i></button>
-      </div>`;
-    }).join('')}</div>`;
-  }
-
+  if(!filt.length){rows=`<div class="empty"><i class="ti ti-list"></i><p style="margin:0;font-size:13px">${S.todos.length?'No tasks in this category.':'No tasks yet. Add your first one!'}</p></div>`;}
+  else{rows=`<div class="card">${filt.map((t,i)=>{const cc=TCC[t.category]||TCC.General;
+    return`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:${i?'.5px solid rgba(0,0,0,.08)':'none'};background:${t.done?'#fafafa':'transparent'}">
+      <div onclick="tTog('${t.id}')" style="width:18px;height:18px;border-radius:4px;border:1.5px solid rgba(0,0,0,.28);background:${t.done?'#1a1a1a':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer">
+        ${t.done?'<i class="ti ti-check" style="font-size:11px;color:#fff"></i>':''}
+      </div>
+      <span style="flex:1;font-size:14px;color:${t.done?'#aaa':'#1a1a1a'};text-decoration:${t.done?'line-through':'none'}">${x(t.text)}</span>
+      <span style="font-size:11px;font-weight:500;padding:2px 8px;border-radius:999px;background:${cc.bg};color:${cc.tx};flex-shrink:0;white-space:nowrap">${t.category}</span>
+      <button class="bi" onclick="tDel('${t.id}')"><i class="ti ti-trash"></i></button>
+    </div>`;}).join('')}</div>`;}
   return`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.2rem">
     <div><h2 style="margin:0;font-size:18px;font-weight:500">Todo & notes</h2><p style="margin:2px 0 0;font-size:13px;color:#666">${pending} pending · ${S.todos.filter(t=>t.done).length} done</p></div>
   </div>
@@ -387,19 +465,13 @@ function renderTodo(){
     <select id="tcat" style="width:auto">${TCATS.map(c=>`<option value="${c}">${c}</option>`).join('')}</select>
     <button class="bp" onclick="tAdd()" style="display:flex;align-items:center;gap:4px"><i class="ti ti-plus" style="font-size:14px"></i> Add</button>
   </div>
-  <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:1rem">${fbtns}</div>
-  ${rows}`;
+  <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:1rem">${fbtns}</div>${rows}`;
 }
-function tAdd(){
-  const inp=document.getElementById('tinput');const cat=document.getElementById('tcat');
-  if(!inp?.value.trim())return;
-  S.todos=[{id:uid(),text:inp.value.trim(),done:false,category:cat?.value||'General',createdAt:new Date().toISOString()},...S.todos];
-  persist();re();
-}
+function tAdd(){const inp=document.getElementById('tinput');const cat=document.getElementById('tcat');if(!inp?.value.trim())return;S.todos=[{id:uid(),text:inp.value.trim(),done:false,category:cat?.value||'General',createdAt:new Date().toISOString()},...S.todos];persist();re();}
 function tTog(id){S.todos=S.todos.map(t=>t.id===id?{...t,done:!t.done}:t);persist();re();}
 function tDel(id){S.todos=S.todos.filter(t=>t.id!==id);persist();re();}
 
-// ─── PROGRESS ─────────────────────────────────────────────────────────────────
+// ─── PROGRESS TAB ─────────────────────────────────────────────────────────────
 function renderProgress(){
   const cnt=JST.reduce((a,s)=>({...a,[s]:S.apps.filter(v=>v.status===s).length}),{});
   const comp=S.learning.completed||{};
@@ -408,22 +480,16 @@ function renderProgress(){
   const done=SUBS.reduce((a,s)=>a+(comp[s.id]||[]).length,0);
   const tdone=S.todos.filter(t=>t.done).length;
   const upcoming=S.events.filter(e=>e.date>=new Date().toISOString().split('T')[0]).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,6);
-
+  const ovPct=Math.round(done/total*100);
   const pipeline=!S.apps.length?`<p style="font-size:13px;color:#888;margin:0">No applications yet.</p>`:
     JST.map(s=>{const c=JC[s];const n=cnt[s]||0;const p=S.apps.length?Math.round(n/S.apps.length*100):0;
       return`<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:3px">
         <span style="font-size:12px;display:flex;align-items:center;gap:5px"><span style="width:6px;height:6px;border-radius:50%;background:${c.dot};display:inline-block"></span>${s}</span>
         <span style="font-size:12px;font-weight:500">${n}</span></div>
         <div class="pt"><div class="pf" style="width:${p}%;background:${c.dot}"></div></div>
-      </div>`;
-    }).join('');
-
+      </div>`;}).join('');
   const todoBars=!S.todos.length?`<p style="font-size:13px;color:#888;margin:0">No tasks yet.</p>`:
-    TCATS.map(c=>{const ct=S.todos.filter(t=>t.category===c);if(!ct.length)return'';
-      const p=Math.round(ct.filter(t=>t.done).length/ct.length*100);
-      return pb(c,p,TCC[c]?.dot||'#888',`${ct.filter(t=>t.done).length}/${ct.length}`);
-    }).join('');
-
+    TCATS.map(c=>{const ct=S.todos.filter(t=>t.category===c);if(!ct.length)return'';const p=Math.round(ct.filter(t=>t.done).length/ct.length*100);return pb(c,p,TCC[c]?.dot||'#888',`${ct.filter(t=>t.done).length}/${ct.length}`);}).join('');
   const ulist=!upcoming.length?`<p style="font-size:13px;color:#888;margin:0">No upcoming events.</p>`:
     upcoming.map(e=>{const d=new Date(e.date+'T12:00:00');
       return`<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
@@ -435,10 +501,7 @@ function renderProgress(){
           ${e.time?`<p style="margin:0;font-size:11px;color:#888">${x(e.time)}</p>`:''}
           ${e.description?`<p style="margin:2px 0 0;font-size:12px;color:#888">${x(e.description)}</p>`:''}
         </div>
-      </div>`;
-    }).join('');
-
-  const ovPct=Math.round(done/total*100);
+      </div>`;}).join('');
   return`<h2 style="margin:0 0 1.2rem;font-size:18px;font-weight:500">Progress overview</h2>
   <div class="row" style="margin-bottom:1.5rem">
     ${sc('Applications sent',S.apps.length)}${sc('Learning overall',ovPct+'%','#3B6D11')}${sc('Tasks done',S.todos.length?Math.round(tdone/S.todos.length*100)+'%':'—','#3C3489')}${sc('Upcoming events',upcoming.length)}
@@ -459,11 +522,7 @@ function renderProgress(){
 }
 
 // ─── MODALS ───────────────────────────────────────────────────────────────────
-function renderModal(){
-  if(S.modal==='job')return renderJobModal();
-  if(S.modal==='event')return renderEvModal();
-  return'';
-}
+function renderModal(){return S.modal==='job'?renderJobModal():S.modal==='event'?renderEvModal():'';}
 function closeModal(){S.modal=null;S.form={};re();}
 
 function renderJobModal(){
@@ -504,7 +563,6 @@ function renderJobModal(){
     </div>
   </div>`;
 }
-
 function renderEvModal(){
   const f=S.form;
   return`<div class="overlay" onclick="if(event.target===this)closeModal()">
